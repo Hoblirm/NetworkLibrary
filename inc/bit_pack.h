@@ -37,13 +37,13 @@ void print_binary(unsigned char* buffer, int size)
  * are written to buffer. **Note: this method has undefined behavior if the
  * parameter criteria below are not met.
  * @param data - Contents that will be packed into buffer.  It is assumed
- *               to be in Big Endian format, and that all unused bits are
- *               unset. It is also assumed that data is padded with one
- *               extra termination byte that is unset, 0x00.  This padded
- *               byte is used if the specified offsets shift the bits to
- *               the right. The bitwise operations performed in this method
- *               may alter the contents of data. If data is to be used
- *               after this method, a temporary copy should be passed in.
+ *               to be in Big Endian format. It is also assumed that data is
+ *               padded with one extra termination byte. To be specific, the
+ *               byte length of data must be at least [((size_in_bits - 1) / 8) + 2]
+ *               to handle shifted bits if an offset is applied.  The bitwise
+ *               operations performed in this method may alter the contents of
+ *               data. If data is to be used after this method, a temporary
+ *               copy should be passed in.
  * @param size_in_bits - Specifies the bit size of data.  This value must
  *                       be one or greater.
  * @param buffer - Location data is written to.  This method always writes
@@ -64,6 +64,11 @@ inline void pack(unsigned char* data, int size_in_bits, unsigned char* buffer, i
    *             data_offset
    */
   int data_offset = 7 - ((size_in_bits - 1) % 8);
+
+  //Clear the unused prefix bits.
+  //To consider: This step could be skipped if data is unsigned (prefix bits
+  //should already be zero), or if size_in_bits is a multiple of eight (no prefix).
+  data[0] &= 0xFF >> data_offset;
 
   /*
    * We need to ensure that only the bits that belong to data are
@@ -205,6 +210,7 @@ inline void pack(unsigned char* data, int size_in_bits, unsigned char* buffer, i
     int i = number_of_bytes - 1; //tail byte index
 
     //Perform bit offset shift for tail byte.
+    data[i] &= 0x00;
     data[i] |= data[i - 1] << (8 - right_shift); //Get shifted bits from left neighbor
 
     //Perform masked assignment for tail byte.
@@ -278,8 +284,7 @@ inline void unsigned_unpack(unsigned char* data, int size_in_bits, unsigned char
   }
 
   //Clear the unused prefix bits.
-  const unsigned char head_mask = 0xFF >> data_offset;
-  data[0] &= head_mask;
+  data[0] &= 0xFF >> data_offset;
 }
 
 #endif

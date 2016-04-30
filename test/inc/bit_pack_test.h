@@ -24,7 +24,6 @@ public:
      * Case1: One byte no shift
      */
     data[0] = 0xFF;
-    data[1] = 0x00; //unset padded byte
     memset(ary, 0x00, sizeof(ary));
     pack(data, 8, ary, 0);
     TS_ASSERT_EQUALS(ary[0], 0xFF);
@@ -39,7 +38,6 @@ public:
 
     //Same as above, but bits are reversed.
     data[0] = 0x00;
-    data[1] = 0x00; //unset padded byte
     memset(ary, 0xFF, sizeof(ary));
     pack(data, 8, ary, 0);
     TS_ASSERT_EQUALS(ary[0], 0x00);
@@ -55,40 +53,37 @@ public:
     /*
      * Case2: One byte left shift
      */
-    data[0] = 0x0F;
-    data[1] = 0x00; //unset padded byte
+    data[0] = 0xFF;
     memset(ary, 0x00, sizeof(ary));
-    pack(data, 4, ary, 0);
-    TS_ASSERT_EQUALS(ary[0], 0xF0);
+    pack(data, 4, ary, 1);
+    TS_ASSERT_EQUALS(ary[0], 0x78);
     TS_ASSERT_EQUALS(ary[1], 0x00);
     TS_ASSERT_EQUALS(ary[2], 0x00);
     TS_ASSERT_EQUALS(ary[3], 0x00);
     TS_ASSERT_EQUALS(ary[4], 0x00);
 
     data[0] = 0x00;
-    unsigned_unpack(data, 4, ary, 0);
+    unsigned_unpack(data, 4, ary, 1);
     TS_ASSERT_EQUALS(data[0], 0x0F);
 
     //Same as above, but bits are reversed.
     data[0] = 0x00;
-    data[1] = 0x00; //unset padded byte
     memset(ary, 0xFF, sizeof(ary));
-    pack(data, 4, ary, 0);
-    TS_ASSERT_EQUALS(ary[0], 0x0F);
+    pack(data, 4, ary, 1);
+    TS_ASSERT_EQUALS(ary[0], 0x87);
     TS_ASSERT_EQUALS(ary[1], 0xFF);
     TS_ASSERT_EQUALS(ary[2], 0xFF);
     TS_ASSERT_EQUALS(ary[3], 0xFF);
     TS_ASSERT_EQUALS(ary[4], 0xFF);
 
     data[0] = 0x0F;
-    unsigned_unpack(data, 4, ary, 0);
+    unsigned_unpack(data, 4, ary, 1);
     TS_ASSERT_EQUALS(data[0], 0x00);
 
     /*
      * Case3: One byte right shift
      */
     data[0] = 0xFF;
-    data[1] = 0x00; //unset padded byte
     memset(ary, 0x00, sizeof(ary));
     pack(data, 8, ary, 4);
     TS_ASSERT_EQUALS(ary[0], 0x0F);
@@ -103,7 +98,6 @@ public:
 
     //Same as above, but bits are reversed.
     data[0] = 0x00;
-    data[1] = 0x00; //unset padded byte
     memset(ary, 0xFF, sizeof(ary));
     pack(data, 8, ary, 4);
     TS_ASSERT_EQUALS(ary[0], 0xF0);
@@ -123,7 +117,6 @@ public:
     data[1] = 0xFF;
     data[2] = 0xFF;
     data[3] = 0xFF;
-    data[4] = 0x00; //unset padded byte
     memset(ary, 0x00, sizeof(ary));
     pack(data, 32, ary, 0);
     TS_ASSERT_EQUALS(ary[0], 0xFF);
@@ -147,7 +140,6 @@ public:
     data[1] = 0x00;
     data[2] = 0x00;
     data[3] = 0x00;
-    data[4] = 0xFF; //unset padded byte
     memset(ary, 0xFF, sizeof(ary));
     pack(data, 32, ary, 0);
     TS_ASSERT_EQUALS(ary[0], 0x00);
@@ -173,7 +165,6 @@ public:
     data[1] = 0xFF;
     data[2] = 0xFF;
     data[3] = 0xFF;
-    data[4] = 0x00; //unset padded byte
     memset(ary, 0x00, sizeof(ary));
     pack(data, 28, ary, 0);
     TS_ASSERT_EQUALS(ary[0], 0xFF);
@@ -197,7 +188,6 @@ public:
     data[1] = 0x00;
     data[2] = 0x00;
     data[3] = 0x00;
-    data[4] = 0x00; //unset padded byte
     memset(ary, 0xFF, sizeof(ary));
     pack(data, 28, ary, 0);
     TS_ASSERT_EQUALS(ary[0], 0x00);
@@ -223,7 +213,6 @@ public:
     data[1] = 0xFF;
     data[2] = 0xFF;
     data[3] = 0xFF;
-    data[4] = 0x00; //unset padded byte
     memset(ary, 0x00, sizeof(ary));
     pack(data, 32, ary, 4);
     TS_ASSERT_EQUALS(ary[0], 0x0F);
@@ -247,7 +236,6 @@ public:
     data[1] = 0x00;
     data[2] = 0x00;
     data[3] = 0x00;
-    data[4] = 0x00; //unset padded byte
     memset(ary, 0xFF, sizeof(ary));
     pack(data, 32, ary, 4);
     TS_ASSERT_EQUALS(ary[0], 0xF0);
