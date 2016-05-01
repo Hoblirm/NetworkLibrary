@@ -36,6 +36,10 @@ public:
     unsigned_unpack(data, 8, ary, 0);
     TS_ASSERT_EQUALS(data[0], 0xFF);
 
+    data[0] = 0x00;
+    signed_unpack(data, 8, ary, 0);
+    TS_ASSERT_EQUALS(data[0], 0xFF);
+
     //Same as above, but bits are reversed.
     data[0] = 0x00;
     memset(ary, 0xFF, sizeof(ary));
@@ -48,6 +52,10 @@ public:
 
     data[0] = 0xFF;
     unsigned_unpack(data, 8, ary, 0);
+    TS_ASSERT_EQUALS(data[0], 0x00);
+
+    data[0] = 0xFF;
+    signed_unpack(data, 8, ary, 0);
     TS_ASSERT_EQUALS(data[0], 0x00);
 
     /*
@@ -66,6 +74,10 @@ public:
     unsigned_unpack(data, 4, ary, 1);
     TS_ASSERT_EQUALS(data[0], 0x0F);
 
+    data[0] = 0x00;
+    signed_unpack(data, 4, ary, 1);
+    TS_ASSERT_EQUALS(data[0], 0xFF);
+
     //Same as above, but bits are reversed.
     data[0] = 0x00;
     memset(ary, 0xFF, sizeof(ary));
@@ -78,6 +90,10 @@ public:
 
     data[0] = 0x0F;
     unsigned_unpack(data, 4, ary, 1);
+    TS_ASSERT_EQUALS(data[0], 0x00);
+
+    data[0] = 0x0F;
+    signed_unpack(data, 4, ary, 1);
     TS_ASSERT_EQUALS(data[0], 0x00);
 
     /*
@@ -96,6 +112,10 @@ public:
     unsigned_unpack(data, 8, ary, 4);
     TS_ASSERT_EQUALS(data[0], 0xFF);
 
+    data[0] = 0x00;
+    signed_unpack(data, 8, ary, 4);
+    TS_ASSERT_EQUALS(data[0], 0xFF);
+
     //Same as above, but bits are reversed.
     data[0] = 0x00;
     memset(ary, 0xFF, sizeof(ary));
@@ -108,6 +128,10 @@ public:
 
     data[0] = 0xFF;
     unsigned_unpack(data, 8, ary, 4);
+    TS_ASSERT_EQUALS(data[0], 0x00);
+
+    data[0] = 0xFF;
+    signed_unpack(data, 8, ary, 4);
     TS_ASSERT_EQUALS(data[0], 0x00);
 
     /*

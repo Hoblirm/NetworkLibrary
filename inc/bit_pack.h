@@ -66,8 +66,9 @@ inline void pack(unsigned char* data, int size_in_bits, unsigned char* buffer, i
   int data_offset = 7 - ((size_in_bits - 1) % 8);
 
   //Clear the unused prefix bits.
-  //To consider: This step could be skipped if data is unsigned (prefix bits
-  //should already be zero), or if size_in_bits is a multiple of eight (no prefix).
+  //Note: If specialized methods are ever written, this step could be skipped
+  //      for unsigned types (prefix bits should already be zero), or if
+  //      size_in_bits is a multiple of eight (no prefix).
   data[0] &= 0xFF >> data_offset;
 
   /*
@@ -245,21 +246,12 @@ inline void pack(unsigned char* data, int size_in_bits, unsigned char* buffer, i
 
 /*
  * This method unpacks data with a given size_in_bits from a buffer with a
- * specified buffer_offset in bits.
- * @param data - Where buffer bits will be unpacked to. It will be written
- *               in Big Endian format.  If size_in_bits is not a multiple
- *               of eight, the unused prefix bits in data will be cleared.
- *
- * @param size_in_bits - Specifies the bit size of data.  This value must
- *                       be one or greater.
- * @param buffer - Location data is read from.  This method always reads
- *                 from the first byte in buffer.
- * @param buffer_offset - Offset in bits that specifies where data will begin
- *                        in buffer's first byte.  Must be between 0(MSB) and 7(LSB).
+ * specified buffer_offset in bits.  This is a private implementation method and
+ * is intended to be used by unsigned_unpack() and signed_unpack().
  */
-inline void unsigned_unpack(unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+inline void unpack_impl(unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset,
+    int data_offset)
 {
-  const int data_offset = 7 - ((size_in_bits - 1) % 8);
   const int number_of_bytes = ((size_in_bits - 1) / 8) + 1;
 
   if (buffer_offset <= data_offset)
@@ -282,9 +274,67 @@ inline void unsigned_unpack(unsigned char* data, int size_in_bits, unsigned char
       data[i] |= buffer[i + 1] >> (8 - left_shift);
     }
   }
+}
+
+/*
+ * This method unpacks data with a given size_in_bits from a buffer with a
+ * specified buffer_offset in bits.
+ * @param data - Where buffer bits will be unpacked to. It will be written
+ *               in Big Endian format.  When size_in_bits is not a multiple
+ *               of eight, there will be "left-over" prefix bits in the first
+ *               byte.  These will always be cleared.
+ * @param size_in_bits - Specifies the bit size of data.  This value must
+ *                       be one or greater.
+ * @param buffer - Location data is read from.  This method always reads
+ *                 from the first byte in buffer.
+ * @param buffer_offset - Offset in bits that specifies where data will begin
+ *                        in buffer's first byte.  Must be between 0(MSB) and 7(LSB).
+ */
+inline void unsigned_unpack(unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  const int data_offset = 7 - ((size_in_bits - 1) % 8);
+  unpack_impl(data, size_in_bits, buffer, buffer_offset, data_offset);
 
   //Clear the unused prefix bits.
   data[0] &= 0xFF >> data_offset;
+}
+
+/*
+ * This method unpacks data with a given size_in_bits from a buffer with a
+ * specified buffer_offset in bits.
+ * @param data - Where buffer bits will be unpacked to. It will be written
+ *               in Big Endian format.  When size_in_bits is not a multiple
+ *               of eight, there will be "left-over" prefix bits in the first
+ *               byte.  These will be set if the "signed" bit is 1, otherwise
+ *               they will be cleared.
+ * @param size_in_bits - Specifies the bit size of data.  This value must
+ *                       be one or greater.
+ * @param buffer - Location data is read from.  This method always reads
+ *                 from the first byte in buffer.
+ * @param buffer_offset - Offset in bits that specifies where data will begin
+ *                        in buffer's first byte.  Must be between 0(MSB) and 7(LSB).
+ */
+inline void signed_unpack(unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  const int data_offset = 7 - ((size_in_bits - 1) % 8);
+  unpack_impl(data, size_in_bits, buffer, buffer_offset, data_offset);
+
+  //The bit located at data_offset is the "signed" bit.  We must make a mask to determine
+  //if data is positive or negative.
+  const unsigned char sign_mask = (0xFF >> data_offset) & (0xFF << (8 - (data_offset + 1)));
+
+  //Sign bit is not set (positive)
+  if ((data[0] & sign_mask) == 0)
+  {
+    //Clear the unused prefix bits.
+    data[0] &= 0xFF >> data_offset;
+  }
+  //Sign bit is set (negative)
+  else
+  {
+    //Set the unused prefix bits.
+    data[0] |= 0xFF << (8 - data_offset);
+  }
 }
 
 #endif
