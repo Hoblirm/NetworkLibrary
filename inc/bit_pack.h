@@ -37,13 +37,10 @@ void print_binary(unsigned char* buffer, int size)
  * are written to buffer. **Note: this method has undefined behavior if the
  * parameter criteria below are not met.
  * @param data - Contents that will be packed into buffer.  It is assumed
- *               to be in Big Endian format. It is also assumed that data is
- *               padded with one extra termination byte. To be specific, the
- *               byte length of data must be at least [((size_in_bits - 1) / 8) + 2]
- *               to handle shifted bits if an offset is applied.  The bitwise
- *               operations performed in this method may alter the contents of
- *               data. If data is to be used after this method, a temporary
- *               copy should be passed in.
+ *               to be in Big Endian format. It is also assumed that the
+ *               length of data. The bitwise operations performed in this
+ *               method may alter the contents of data. If data is to be used
+ *               after this method, a temporary copy should be passed in.
  * @param size_in_bits - Specifies the bit size of data.  This value must
  *                       be one or greater.
  * @param buffer - Location data is written to.  This method always writes
@@ -202,22 +199,24 @@ inline void pack(unsigned char* data, int size_in_bits, unsigned char* buffer, i
      */
     unsigned char tail_mask = 0xFF >> right_shift;
 
+
     /*
      * Since a right shift is being performed, each byte must collect shifted
      * bits from its left neighbor.  We want to ensure that the "neighbor" byte
      * isn't written to prior to the bits being collected.  Therefore we go
      * through the bytes in reverse order, starting with the tail byte.
      */
-    int i = number_of_bytes - 1; //tail byte index
+    int i = number_of_bytes - 1; //byte index
 
-    //Perform bit offset shift for tail byte.
-    data[i] &= 0x00;
-    data[i] |= data[i - 1] << (8 - right_shift); //Get shifted bits from left neighbor
+    //Since a right shift is performed, an overflow byte is used to get the bits that
+    //were shifted out of data.
+    unsigned char overflow_byte = 0x00;
+    overflow_byte |= data[i - 1] << (8 - right_shift); //Get shifted bits from left neighbor
 
-    //Perform masked assignment for tail byte.
-    buffer[i] |= data[i];
-    data[i] |= tail_mask;
-    buffer[i] &= data[i];
+    //Perform masked assignment for overflow byte.
+    buffer[i] |= overflow_byte;
+    overflow_byte |= tail_mask;
+    buffer[i] &= overflow_byte;
     --i; //Decrement i to move to next byte.
 
     /*

@@ -17,7 +17,7 @@ public:
 
   void test_pack(void)
   {
-    unsigned char data[5] = { 0 };
+    unsigned char data[4] = { 0 };
     unsigned char ary[5] = { 0 };
 
     /*
