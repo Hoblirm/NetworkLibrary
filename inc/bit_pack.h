@@ -318,12 +318,8 @@ inline void signed_unpack(unsigned char* data, int size_in_bits, unsigned char* 
   const int data_offset = 7 - ((size_in_bits - 1) % 8);
   unpack_impl(data, size_in_bits, buffer, buffer_offset, data_offset);
 
-  //The bit located at data_offset is the "signed" bit.  We must make a mask to determine
-  //if data is positive or negative.
-  const unsigned char sign_mask = (0xFF >> data_offset) & (0xFF << (8 - (data_offset + 1)));
-
   //Sign bit is not set (positive)
-  if ((data[0] & sign_mask) == 0)
+  if (((data[0] << data_offset) & 0x80) == 0)
   {
     //Clear the unused prefix bits.
     data[0] &= 0xFF >> data_offset;
