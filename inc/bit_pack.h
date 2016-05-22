@@ -2,6 +2,9 @@
 #define BIT_PACK_H
 
 #include <stdio.h>
+#include <stdint.h>
+
+#define BIT_PACK_MAX_STRING_LENGTH 81
 
 bool is_big_endian()
 {
@@ -37,8 +40,7 @@ void print_binary(unsigned char* buffer, int size)
  * are written to buffer. **Note: this method has undefined behavior if the
  * parameter criteria below are not met.
  * @param data - Contents that will be packed into buffer.  It is assumed
- *               to be in Big Endian format. It is also assumed that the
- *               length of data. The bitwise operations performed in this
+ *               to be in Big Endian format. The bitwise operations performed in this
  *               method may alter the contents of data. If data is to be used
  *               after this method, a temporary copy should be passed in.
  * @param size_in_bits - Specifies the bit size of data.  This value must
@@ -48,7 +50,7 @@ void print_binary(unsigned char* buffer, int size)
  * @param buffer_offset - Offset in bits that specifies where data will begin
  *                        in buffer's first byte.  Must be between 0(MSB) and 7(LSB).
  */
-inline void pack(unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+inline void pack_impl(unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
   /*
    * We are assuming the data passed in is Big Endian.  If the size_in_bits
@@ -199,7 +201,6 @@ inline void pack(unsigned char* data, int size_in_bits, unsigned char* buffer, i
      */
     unsigned char tail_mask = 0xFF >> right_shift;
 
-
     /*
      * Since a right shift is being performed, each byte must collect shifted
      * bits from its left neighbor.  We want to ensure that the "neighbor" byte
@@ -243,17 +244,86 @@ inline void pack(unsigned char* data, int size_in_bits, unsigned char* buffer, i
 
 }
 
+inline void pack(uint64_t data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  data = __builtin_bswap64(data);
+  const int byte_offset = 7 - (size_in_bits - 1) / 8;
+  pack_impl(((unsigned char*) &data) + byte_offset, size_in_bits, buffer, buffer_offset);
+}
+
+inline void pack(uint32_t data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  data = __builtin_bswap32(data);
+  const int byte_offset = 3 - (size_in_bits - 1) / 8;
+  pack_impl(((unsigned char*) &data) + byte_offset, size_in_bits, buffer, buffer_offset);
+}
+
+inline void pack(uint16_t data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  unsigned char tmp = ((unsigned char*) &data)[0];
+  ((unsigned char*) &data)[0] = ((unsigned char*) &data)[1];
+  ((unsigned char*) &data)[1] = tmp;
+  const int byte_offset = (size_in_bits < 9);
+  pack_impl(((unsigned char*) &data) + byte_offset, size_in_bits, buffer, buffer_offset);
+}
+
+inline void pack(const unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  unsigned char data_cpy[BIT_PACK_MAX_STRING_LENGTH];
+  memcpy(data_cpy, data, (size_in_bits - 1) / 8 + 1);
+  pack_impl(data_cpy, size_in_bits, buffer, buffer_offset);
+}
+
+inline void pack(int64_t data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  pack(*(uint64_t*) &data, size_in_bits, buffer, buffer_offset);
+}
+
+inline void pack(int32_t data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  pack(*(uint32_t*) &data, size_in_bits, buffer, buffer_offset);
+}
+
+inline void pack(int16_t data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  pack(*(uint16_t*) &data, size_in_bits, buffer, buffer_offset);
+}
+
+inline void pack(int8_t data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  pack_impl((unsigned char*) &data, size_in_bits, buffer, buffer_offset);
+}
+
 /*
  * This method unpacks data with a given size_in_bits from a buffer with a
- * specified buffer_offset in bits.  This is a private implementation method and
- * is intended to be used by unsigned_unpack() and signed_unpack().
+ * specified buffer_offset in bits.  This is a private implementation method
  */
 inline void unpack_impl(unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset,
     int data_offset)
 {
   const int number_of_bytes = ((size_in_bits - 1) / 8) + 1;
 
-  if (buffer_offset <= data_offset)
+  if (data_offset <= buffer_offset)
+  {
+    //If buffer_offset is zero, data_offset is also zero, which makes this trivial.
+    if (buffer_offset == 0)
+    {
+      for (int i = 0; i < number_of_bytes; ++i)
+      {
+        data[i] = buffer[i];
+      }
+    }
+    else
+    {
+      const int left_shift = buffer_offset - data_offset;
+      for (int i = 0; i < number_of_bytes; ++i)
+      {
+        data[i] = buffer[i] << left_shift;
+        data[i] |= buffer[i + 1] >> (8 - left_shift);
+      }
+    }
+  }
+  else
   {
     const int right_shift = data_offset - buffer_offset;
 
@@ -264,32 +334,33 @@ inline void unpack_impl(unsigned char* data, int size_in_bits, unsigned char* bu
       data[i] |= buffer[i - 1] << (8 - right_shift);
     }
   }
-  else
-  {
-    const int left_shift = buffer_offset - data_offset;
-    for (int i = 0; i < number_of_bytes; ++i)
-    {
-      data[i] = buffer[i] << left_shift;
-      data[i] |= buffer[i + 1] >> (8 - left_shift);
-    }
-  }
+
 }
 
-/*
- * This method unpacks data with a given size_in_bits from a buffer with a
- * specified buffer_offset in bits.
- * @param data - Where buffer bits will be unpacked to. It will be written
- *               in Big Endian format.  When size_in_bits is not a multiple
- *               of eight, there will be "left-over" prefix bits in the first
- *               byte.  These will always be cleared.
- * @param size_in_bits - Specifies the bit size of data.  This value must
- *                       be one or greater.
- * @param buffer - Location data is read from.  This method always reads
- *                 from the first byte in buffer.
- * @param buffer_offset - Offset in bits that specifies where data will begin
- *                        in buffer's first byte.  Must be between 0(MSB) and 7(LSB).
- */
-inline void unsigned_unpack(unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+inline void unpack(uint64_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
+  *data = __builtin_bswap64(*data);
+  *data >>= 64 - size_in_bits;
+}
+
+inline void unpack(uint32_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
+  *data = __builtin_bswap32(*data);
+  *data >>= 32 - size_in_bits;
+}
+
+inline void unpack(uint16_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
+  unsigned char tmp = ((unsigned char*) data)[0];
+  ((unsigned char*) data)[0] = ((unsigned char*) data)[1];
+  ((unsigned char*) data)[1] = tmp;
+  *data >>= 16 - size_in_bits;
+}
+
+inline void unpack(unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
   const int data_offset = 7 - ((size_in_bits - 1) % 8);
   unpack_impl(data, size_in_bits, buffer, buffer_offset, data_offset);
@@ -298,38 +369,33 @@ inline void unsigned_unpack(unsigned char* data, int size_in_bits, unsigned char
   data[0] &= 0xFF >> data_offset;
 }
 
-/*
- * This method unpacks data with a given size_in_bits from a buffer with a
- * specified buffer_offset in bits.
- * @param data - Where buffer bits will be unpacked to. It will be written
- *               in Big Endian format.  When size_in_bits is not a multiple
- *               of eight, there will be "left-over" prefix bits in the first
- *               byte.  These will be set if the "signed" bit is 1, otherwise
- *               they will be cleared.
- * @param size_in_bits - Specifies the bit size of data.  This value must
- *                       be one or greater.
- * @param buffer - Location data is read from.  This method always reads
- *                 from the first byte in buffer.
- * @param buffer_offset - Offset in bits that specifies where data will begin
- *                        in buffer's first byte.  Must be between 0(MSB) and 7(LSB).
- */
-inline void signed_unpack(unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+inline void unpack(int64_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
-  const int data_offset = 7 - ((size_in_bits - 1) % 8);
-  unpack_impl(data, size_in_bits, buffer, buffer_offset, data_offset);
+  unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
+  *(uint64_t*) data = __builtin_bswap64(*(uint64_t*) data);
+  *data >>= 64 - size_in_bits;
+}
 
-  //Sign bit is not set (positive)
-  if (((data[0] << data_offset) & 0x80) == 0)
-  {
-    //Clear the unused prefix bits.
-    data[0] &= 0xFF >> data_offset;
-  }
-  //Sign bit is set (negative)
-  else
-  {
-    //Set the unused prefix bits.
-    data[0] |= 0xFF << (8 - data_offset);
-  }
+inline void unpack(int32_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
+  *(uint32_t*) data = __builtin_bswap32(*(uint32_t*) data);
+  *data >>= 32 - size_in_bits;
+}
+
+inline void unpack(int16_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
+  unsigned char tmp = ((unsigned char*) data)[0];
+  ((unsigned char*) data)[0] = ((unsigned char*) data)[1];
+  ((unsigned char*) data)[1] = tmp;
+  *data >>= 16 - size_in_bits;
+}
+
+inline void unpack(int8_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
+  *data >>= 8 - size_in_bits;
 }
 
 #endif
