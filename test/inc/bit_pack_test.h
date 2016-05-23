@@ -320,8 +320,9 @@ public:
         //overlap any bits within buffer.
         int tail_offset = (size_in_bits + buffer_offset) % 8;
         int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
         int8_t tail = 0x00;            //Since the end of data is '1' use '0' for tail.
-        pack(tail, tail_size, buffer + sizeof(uint64_t), tail_offset);
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
 
         //Unpack the 'unused' head bits.  Ensure it matches what was packed.
         if (buffer_offset != 0)
@@ -338,7 +339,7 @@ public:
 
         //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
         int8_t tail_val;
-        unpack(&tail_val, tail_size, buffer + sizeof(uint64_t), tail_offset);
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
         TS_ASSERT_EQUALS(tail, tail_val);
       }            //for: bit_offset
     }  //for: bit_size
@@ -385,8 +386,9 @@ public:
         //overlap any bits within buffer.
         int tail_offset = (size_in_bits + buffer_offset) % 8;
         int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
         int8_t tail = 0x00;            //Since the end of data is '1' use '0' for tail.
-        pack(tail, tail_size, buffer + sizeof(uint32_t), tail_offset);
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
 
         //Unpack the 'unused' head bits.  Ensure it matches what was packed.
         if (buffer_offset != 0)
@@ -403,7 +405,7 @@ public:
 
         //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
         int8_t tail_val;
-        unpack(&tail_val, tail_size, buffer + sizeof(uint32_t), tail_offset);
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
         TS_ASSERT_EQUALS(tail, tail_val);
       }            //for: bit_offset
     }  //for: bit_size
@@ -450,8 +452,9 @@ public:
         //overlap any bits within buffer.
         int tail_offset = (size_in_bits + buffer_offset) % 8;
         int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
         int8_t tail = 0x00;            //Since the end of data is '1' use '0' for tail.
-        pack(tail, tail_size, buffer + sizeof(uint16_t), tail_offset);
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
 
         //Unpack the 'unused' head bits.  Ensure it matches what was packed.
         if (buffer_offset != 0)
@@ -468,7 +471,7 @@ public:
 
         //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
         int8_t tail_val;
-        unpack(&tail_val, tail_size, buffer + sizeof(uint16_t), tail_offset);
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
         TS_ASSERT_EQUALS(tail, tail_val);
       }            //for: bit_offset
     }  //for: bit_size
@@ -515,8 +518,9 @@ public:
         //overlap any bits within buffer.
         int tail_offset = (size_in_bits + buffer_offset) % 8;
         int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
         int8_t tail = 0x00;            //Since the end of data is '1' use '0' for tail.
-        pack(tail, tail_size, buffer + sizeof(uint8_t), tail_offset);
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
 
         //Unpack the 'unused' head bits.  Ensure it matches what was packed.
         if (buffer_offset != 0)
@@ -533,7 +537,7 @@ public:
 
         //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
         int8_t tail_val;
-        unpack(&tail_val, tail_size, buffer + sizeof(uint8_t), tail_offset);
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
         TS_ASSERT_EQUALS(tail, tail_val);
       }            //for: bit_offset
     }  //for: bit_size
@@ -580,8 +584,9 @@ public:
         //overlap any bits within buffer.
         int tail_offset = (size_in_bits + buffer_offset) % 8;
         int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
         int8_t tail = 0x00;            //Since the end of data is '1' use '0' for tail.
-        pack(tail, tail_size, buffer + sizeof(int64_t), tail_offset);
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
 
         //Unpack the 'unused' head bits.  Ensure it matches what was packed.
         if (buffer_offset != 0)
@@ -598,7 +603,7 @@ public:
 
         //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
         int8_t tail_val;
-        unpack(&tail_val, tail_size, buffer + sizeof(int64_t), tail_offset);
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
         TS_ASSERT_EQUALS(tail, tail_val);
       }
     }
@@ -641,8 +646,9 @@ public:
         //overlap any bits within buffer.
         int tail_offset = (size_in_bits + buffer_offset) % 8;
         int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
         int8_t tail = 0xFF;        //Since the end of data is '0' use '1' for tail.
-        pack(tail, tail_size, buffer + sizeof(int64_t), tail_offset);
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
 
         //Unpack the 'unused' head bits.  Ensure it matches what was packed.
         if (buffer_offset != 0)
@@ -659,7 +665,7 @@ public:
 
         //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
         int8_t tail_val;
-        unpack(&tail_val, tail_size, buffer + sizeof(int64_t), tail_offset);
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
         TS_ASSERT_EQUALS(tail, tail_val);
       }        //for: bit_offset
     }        //for: size_in_bits
@@ -706,8 +712,9 @@ public:
         //overlap any bits within buffer.
         int tail_offset = (size_in_bits + buffer_offset) % 8;
         int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
         int8_t tail = 0x00;        //Since the end of data is '1' use '0' for tail.
-        pack(tail, tail_size, buffer + sizeof(int32_t), tail_offset);
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
 
         //Unpack the 'unused' head bits.  Ensure it matches what was packed.
         if (buffer_offset != 0)
@@ -724,7 +731,7 @@ public:
 
         //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
         int8_t tail_val;
-        unpack(&tail_val, tail_size, buffer + sizeof(int32_t), tail_offset);
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
         TS_ASSERT_EQUALS(tail, tail_val);
       }
     }
@@ -767,8 +774,9 @@ public:
         //overlap any bits within buffer.
         int tail_offset = (size_in_bits + buffer_offset) % 8;
         int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
         int8_t tail = 0xFF;        //Since the end of data is '0' use '1' for tail.
-        pack(tail, tail_size, buffer + sizeof(int32_t), tail_offset);
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
 
         //Unpack the 'unused' head bits.  Ensure it matches what was packed.
         if (buffer_offset != 0)
@@ -785,7 +793,7 @@ public:
 
         //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
         int8_t tail_val;
-        unpack(&tail_val, tail_size, buffer + sizeof(int32_t), tail_offset);
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
         TS_ASSERT_EQUALS(tail, tail_val);
       }        //for: bit_offset
     }        //for: bit_size
@@ -832,8 +840,9 @@ public:
         //overlap any bits within buffer.
         int tail_offset = (size_in_bits + buffer_offset) % 8;
         int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
         int8_t tail = 0x00;        //Since the end of data is '1' use '0' for tail.
-        pack(tail, tail_size, buffer + sizeof(int16_t), tail_offset);
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
 
         //Unpack the 'unused' head bits.  Ensure it matches what was packed.
         if (buffer_offset != 0)
@@ -850,7 +859,7 @@ public:
 
         //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
         int8_t tail_val;
-        unpack(&tail_val, tail_size, buffer + sizeof(int16_t), tail_offset);
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
         TS_ASSERT_EQUALS(tail, tail_val);
       }
     }
@@ -893,8 +902,9 @@ public:
         //overlap any bits within buffer.
         int tail_offset = (size_in_bits + buffer_offset) % 8;
         int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
         int8_t tail = 0xFF;        //Since the end of data is '0' use '1' for tail.
-        pack(tail, tail_size, buffer + sizeof(int16_t), tail_offset);
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
 
         //Unpack the 'unused' head bits.  Ensure it matches what was packed.
         if (buffer_offset != 0)
@@ -911,7 +921,7 @@ public:
 
         //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
         int8_t tail_val;
-        unpack(&tail_val, tail_size, buffer + sizeof(int16_t), tail_offset);
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
         TS_ASSERT_EQUALS(tail, tail_val);
       }        //for: bit_offset
     }        //for: bit_size
@@ -958,8 +968,9 @@ public:
         //overlap any bits within buffer.
         int tail_offset = (size_in_bits + buffer_offset) % 8;
         int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
         int8_t tail = 0x00;        //Since the end of data is '1' use '0' for tail.
-        pack(tail, tail_size, buffer + sizeof(int8_t), tail_offset);
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
 
         //Unpack the 'unused' head bits.  Ensure it matches what was packed.
         if (buffer_offset != 0)
@@ -976,7 +987,7 @@ public:
 
         //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
         int8_t tail_val;
-        unpack(&tail_val, tail_size, buffer + sizeof(int8_t), tail_offset);
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
         TS_ASSERT_EQUALS(tail, tail_val);
       }
     }
@@ -1019,8 +1030,9 @@ public:
         //overlap any bits within buffer.
         int tail_offset = (size_in_bits + buffer_offset) % 8;
         int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
         int8_t tail = 0xFF;        //Since the end of data is '0' use '1' for tail.
-        pack(tail, tail_size, buffer + sizeof(int8_t), tail_offset);
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
 
         //Unpack the 'unused' head bits.  Ensure it matches what was packed.
         if (buffer_offset != 0)
@@ -1037,7 +1049,7 @@ public:
 
         //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
         int8_t tail_val;
-        unpack(&tail_val, tail_size, buffer + sizeof(int8_t), tail_offset);
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
         TS_ASSERT_EQUALS(tail, tail_val);
       }        //for: bit_offset
     }        //for: bit_size
