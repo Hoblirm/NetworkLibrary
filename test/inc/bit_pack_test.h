@@ -1055,5 +1055,141 @@ public:
     }        //for: bit_size
   }        //test_pack_int8
 
+  void test_pack_uchar(void)
+  {
+    unsigned char buffer[BIT_PACK_MAX_STRING_LENGTH + 1] = { 0 };
+
+    /*
+     * Case1: Default case
+     */
+    //We will test all bit sizes that can be packed by this data type.
+    for (int size_in_bytes = BIT_PACK_MAX_STRING_LENGTH; size_in_bytes >= 1; --size_in_bytes)
+    {
+      int size_in_bits = size_in_bytes * 8;
+
+      //We will use a string that has all bits set.
+      unsigned char data[BIT_PACK_MAX_STRING_LENGTH] = { 0 };
+      memset(data, 0xFF, size_in_bytes);
+
+      //We will also test all bit offsets that can be used by the pack method.
+      for (int buffer_offset = 0; buffer_offset < 8; ++buffer_offset)
+      {
+        //Clear out the contents of buffer.
+        memset(buffer, 0x00, sizeof(buffer));
+
+        //To ensure pack() does not overlap other data in the buffer,
+        //we will also pack bits in front of data.  If a buffer offset
+        //is used in pack(), that means there will be unused bits in
+        //the first byte that data isn't using.
+        int8_t head = 0x00; //Since the front of data is '1' use '0' for head.
+        if (buffer_offset != 0)
+        {
+          pack(head, buffer_offset, buffer, 0);
+        }
+
+        //Now pack data into the buffer.
+        pack(data, size_in_bits, buffer, buffer_offset);
+
+        //We will also pack bits into the unused portion of the
+        //last byte.  This is another test to ensure pack() doesn't
+        //overlap any bits within buffer.
+        int tail_offset = (size_in_bits + buffer_offset) % 8;
+        int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
+        int8_t tail = 0x00;            //Since the end of data is '1' use '0' for tail.
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
+
+        //Unpack the 'unused' head bits.  Ensure it matches what was packed.
+        if (buffer_offset != 0)
+        {
+          int8_t head_val;
+          unpack(&head_val, buffer_offset, buffer, 0);
+          TS_ASSERT_EQUALS(head, head_val);
+        }
+
+        //Unpack data and ensures it matches what was packed.
+        unsigned char val[BIT_PACK_MAX_STRING_LENGTH] = { 0 };
+        unpack(val, size_in_bits, buffer, buffer_offset);
+        for (int i = 0; i < BIT_PACK_MAX_STRING_LENGTH; ++i)
+        {
+          TS_ASSERT_EQUALS(data[i], val[i]);
+        }
+
+        //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
+        int8_t tail_val;
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
+        TS_ASSERT_EQUALS(tail, tail_val);
+      }            //for: bit_offset
+    }  //for: bit_size
+  }  //test_pack_uchar
+
+  void test_pack_char(void)
+  {
+    unsigned char buffer[BIT_PACK_MAX_STRING_LENGTH + 1] = { 0 };
+
+    /*
+     * Case1: Default case
+     */
+    //We will test all bit sizes that can be packed by this data type.
+    for (int size_in_bytes = BIT_PACK_MAX_STRING_LENGTH; size_in_bytes >= 1; --size_in_bytes)
+    {
+      int size_in_bits = size_in_bytes * 8;
+
+      //We will use a string that has all bits cleared.
+      char data[BIT_PACK_MAX_STRING_LENGTH] = { 0 };
+      memset(data, 0x00, size_in_bytes);
+
+      //We will also test all bit offsets that can be used by the pack method.
+      for (int buffer_offset = 0; buffer_offset < 8; ++buffer_offset)
+      {
+        //Clear out the contents of buffer.
+        memset(buffer, 0xFF, sizeof(buffer));
+
+        //To ensure pack() does not overlap other data in the buffer,
+        //we will also pack bits in front of data.  If a buffer offset
+        //is used in pack(), that means there will be unused bits in
+        //the first byte that data isn't using.
+        int8_t head = 0xFF; //Since the front of data is '0' use '1' for head.
+        if (buffer_offset != 0)
+        {
+          pack(head, buffer_offset, buffer, 0);
+        }
+
+        //Now pack data into the buffer.
+        pack(data, size_in_bits, buffer, buffer_offset);
+
+        //We will also pack bits into the unused portion of the
+        //last byte.  This is another test to ensure pack() doesn't
+        //overlap any bits within buffer.
+        int tail_offset = (size_in_bits + buffer_offset) % 8;
+        int tail_size = 8 - tail_offset;
+        int tail_byte_offset = (buffer_offset + size_in_bits) / 8;
+        int8_t tail = 0xFF;            //Since the end of data is '0' use '1' for tail.
+        pack(tail, tail_size, buffer + tail_byte_offset, tail_offset);
+
+        //Unpack the 'unused' head bits.  Ensure it matches what was packed.
+        if (buffer_offset != 0)
+        {
+          int8_t head_val;
+          unpack(&head_val, buffer_offset, buffer, 0);
+          TS_ASSERT_EQUALS(head, head_val);
+        }
+
+        //Unpack data and ensures it matches what was packed.
+        char val[BIT_PACK_MAX_STRING_LENGTH] = { 0 };
+        unpack(val, size_in_bits, buffer, buffer_offset);
+        for (int i = 0; i < BIT_PACK_MAX_STRING_LENGTH; ++i)
+        {
+          TS_ASSERT_EQUALS(data[i], val[i]);
+        }
+
+        //Unpack the 'unused' tail bits.  Ensure it matches what was packed.
+        int8_t tail_val;
+        unpack(&tail_val, tail_size, buffer + tail_byte_offset, tail_offset);
+        TS_ASSERT_EQUALS(tail, tail_val);
+      }            //for: bit_offset
+    }  //for: bit_size
+  }  //test_pack_char
+
 }
 ;

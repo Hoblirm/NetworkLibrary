@@ -267,11 +267,9 @@ inline void pack(uint16_t data, int size_in_bits, unsigned char* buffer, int buf
   pack_impl(((unsigned char*) &data) + byte_offset, size_in_bits, buffer, buffer_offset);
 }
 
-inline void pack(const unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+inline void pack(uint8_t data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
-  unsigned char data_cpy[BIT_PACK_MAX_STRING_LENGTH];
-  memcpy(data_cpy, data, (size_in_bits - 1) / 8 + 1);
-  pack_impl(data_cpy, size_in_bits, buffer, buffer_offset);
+  pack_impl((unsigned char*) &data, size_in_bits, buffer, buffer_offset);
 }
 
 inline void pack(int64_t data, int size_in_bits, unsigned char* buffer, int buffer_offset)
@@ -291,7 +289,19 @@ inline void pack(int16_t data, int size_in_bits, unsigned char* buffer, int buff
 
 inline void pack(int8_t data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
-  pack_impl((unsigned char*) &data, size_in_bits, buffer, buffer_offset);
+  pack(*(uint8_t*) &data, size_in_bits, buffer, buffer_offset);
+}
+
+inline void pack(const unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  unsigned char data_cpy[BIT_PACK_MAX_STRING_LENGTH];
+  memcpy(data_cpy, data, (size_in_bits - 1) / 8 + 1);
+  pack_impl(data_cpy, size_in_bits, buffer, buffer_offset);
+}
+
+inline void pack(const char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  pack((const unsigned char*) data, size_in_bits, buffer, buffer_offset);
 }
 
 /*
@@ -360,14 +370,7 @@ inline void unpack(uint16_t* data, int size_in_bits, unsigned char* buffer, int 
   *data >>= 16 - size_in_bits;
 }
 
-inline void unpack(unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
-{
-  const int data_offset = 7 - ((size_in_bits - 1) % 8);
-  unpack_impl(data, size_in_bits, buffer, buffer_offset, data_offset);
-
-  //Clear the unused prefix bits.
-  data[0] &= 0xFF >> data_offset;
-}
+//uint8_t unpack utilizes the unsigned char version.
 
 inline void unpack(int64_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
@@ -396,6 +399,20 @@ inline void unpack(int8_t* data, int size_in_bits, unsigned char* buffer, int bu
 {
   unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
   *data >>= 8 - size_in_bits;
+}
+
+inline void unpack(unsigned char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  const int data_offset = 7 - ((size_in_bits - 1) % 8);
+  unpack_impl(data, size_in_bits, buffer, buffer_offset, data_offset);
+
+  //Clear the unused prefix bits.
+  data[0] &= 0xFF >> data_offset;
+}
+
+inline void unpack(char* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
+{
+  unpack((unsigned char*) data, size_in_bits, buffer, buffer_offset);
 }
 
 #endif
