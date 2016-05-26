@@ -7,6 +7,22 @@
 
 #define BIT_PACK_MAX_STRING_LENGTH 81
 
+#include <endian.h>
+//**Note: By default, bit_pack uses the htobe32() methods for endian conversion as this is the most efficient.  These are not
+//standard methods, and are not supported on all machines.  If not supported, the htonl() methods should be used.  A 64bit
+//version is provided below as it is not part of inet.h.  These should replace their respective htobeXX() method.
+
+/*
+#include <arpa/inet.h>
+uint64_t htonll(uint64_t n)
+{
+  unsigned char *np = (unsigned char *) &n;
+
+  return ((uint64_t) np[0] << 56) | ((uint64_t) np[1] << 48) | ((uint64_t) np[2] << 40) | ((uint64_t) np[3] << 32)
+      | ((uint64_t) np[4] << 24) | ((uint64_t) np[5] << 16) | ((uint64_t) np[6] << 8) | (uint64_t) np[7];
+}
+*/
+
 bool is_big_endian()
 {
   union
@@ -33,6 +49,9 @@ void print_binary(unsigned char* buffer, int size)
   }
   printf("\n");
 }
+
+
+
 
 /*
  * This method packs data with a given size_in_bits into a buffer with a
@@ -247,23 +266,21 @@ inline void pack_impl(unsigned char* data, int size_in_bits, unsigned char* buff
 
 inline void pack(uint64_t data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
-  data = __builtin_bswap64(data);
+  data = htobe64(data);
   const int byte_offset = 7 - (size_in_bits - 1) / 8;
   pack_impl(((unsigned char*) &data) + byte_offset, size_in_bits, buffer, buffer_offset);
 }
 
 inline void pack(uint32_t data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
-  data = __builtin_bswap32(data);
+  data = htobe32(data);
   const int byte_offset = 3 - (size_in_bits - 1) / 8;
   pack_impl(((unsigned char*) &data) + byte_offset, size_in_bits, buffer, buffer_offset);
 }
 
 inline void pack(uint16_t data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
-  unsigned char tmp = ((unsigned char*) &data)[0];
-  ((unsigned char*) &data)[0] = ((unsigned char*) &data)[1];
-  ((unsigned char*) &data)[1] = tmp;
+  data = htobe16(data);
   const int byte_offset = (size_in_bits < 9);
   pack_impl(((unsigned char*) &data) + byte_offset, size_in_bits, buffer, buffer_offset);
 }
@@ -351,23 +368,21 @@ inline void unpack_impl(unsigned char* data, int size_in_bits, unsigned char* bu
 inline void unpack(uint64_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
   unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
-  *data = __builtin_bswap64(*data);
+  *data = htobe64(*data);
   *data >>= 64 - size_in_bits;
 }
 
 inline void unpack(uint32_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
   unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
-  *data = __builtin_bswap32(*data);
+  *data = htobe32(*data);
   *data >>= 32 - size_in_bits;
 }
 
 inline void unpack(uint16_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
   unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
-  unsigned char tmp = ((unsigned char*) data)[0];
-  ((unsigned char*) data)[0] = ((unsigned char*) data)[1];
-  ((unsigned char*) data)[1] = tmp;
+  *data = htobe16(*data);
   *data >>= 16 - size_in_bits;
 }
 
@@ -376,23 +391,21 @@ inline void unpack(uint16_t* data, int size_in_bits, unsigned char* buffer, int 
 inline void unpack(int64_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
   unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
-  *(uint64_t*) data = __builtin_bswap64(*(uint64_t*) data);
+  *(uint64_t*) data = htobe64(*(uint64_t* ) data);
   *data >>= 64 - size_in_bits;
 }
 
 inline void unpack(int32_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
   unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
-  *(uint32_t*) data = __builtin_bswap32(*(uint32_t*) data);
+  *(uint32_t*) data = htobe32(*(uint32_t* ) data);
   *data >>= 32 - size_in_bits;
 }
 
 inline void unpack(int16_t* data, int size_in_bits, unsigned char* buffer, int buffer_offset)
 {
   unpack_impl((unsigned char *) data, size_in_bits, buffer, buffer_offset, 0);
-  unsigned char tmp = ((unsigned char*) data)[0];
-  ((unsigned char*) data)[0] = ((unsigned char*) data)[1];
-  ((unsigned char*) data)[1] = tmp;
+  *(uint16_t*) data = htobe16(*(uint16_t* ) data);
   *data >>= 16 - size_in_bits;
 }
 
