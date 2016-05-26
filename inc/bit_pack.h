@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 #define BIT_PACK_MAX_STRING_LENGTH 81
 
